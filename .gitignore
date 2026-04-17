@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Claude Code / OMC scratch
+.omc/
+.claude/
+.rtl-agent-team/
+.rat/
+
+# slang-server build cache (if user runs installer in-place)
+slang-server/
+slang-server-build/
