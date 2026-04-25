@@ -4,6 +4,23 @@ All notable changes to `systemverilog-lsp` are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2026-04-25
+
+### Fixed
+- **SessionStart hook JSON schema violation.**
+  `hooks/slang-server-check.sh` emitted
+  `{"hookSpecificOutput":{"additionalContext":"..."}}` without the
+  required `hookEventName` field. Claude Code v2.1.x's hook validator
+  rejects this with
+  `Hook JSON output validation failed — hookSpecificOutput is missing
+  required field "hookEventName"`, blocking session startup whenever
+  slang-server is missing or off-PATH (the exact case the hook is
+  designed to advise on). Both stdout paths (LOCAL_BIN-on-disk advice
+  and missing-binary advice) now include
+  `"hookEventName":"SessionStart"`. Pre-v2.1.x clients accepted the
+  old schema-loose output, which is why this slipped through earlier
+  releases.
+
 ## [1.1.3] - 2026-04-17
 
 ### Added
