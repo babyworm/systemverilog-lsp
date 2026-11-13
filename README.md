@@ -7,11 +7,20 @@ A Claude Code plugin that wires the [slang-server](https://github.com/hudson-tra
 ## Capabilities (via slang-server)
 
 - Diagnostics (lint, syntax, elaboration errors)
-- Hover (type info, documentation)
-- Completion (identifiers, keywords, symbols)
-- Go to definition / Find references
+- Hover (type info, bit widths, constant values, documentation)
+- Go to definition / Find references, including class scopes, virtual
+  interfaces, and implicit function return variables
+- Document and workspace symbols
+- Call hierarchy
+- Completion (identifiers, hierarchical references, struct members, named
+  ports, parameters, and call arguments)
 - Rename symbol
 - Inlay hints (parameter names, types)
+
+Which of these Claude Code actually uses depends on its LSP tool; completion,
+rename, and inlay hints are mainly useful to interactive editors. The list
+tracks slang-server `main`; see the upstream
+[feature docs](https://hudson-trading.github.io/slang-server/) for details.
 
 ## Install
 
@@ -43,16 +52,70 @@ bash scripts/install-slang-server.sh install --mode global
 bash scripts/install-slang-server.sh install --mode skip
 ```
 
+Build requirements (from the slang-server build docs): `git`, `python3`,
+CMake 3.28 or later, and a C++20 compiler (GCC 11+, clang 17+, or Xcode 16+).
+
+### Updating slang-server
+
+The SessionStart hook only checks that a `slang-server` binary exists, so an
+existing install is never refreshed automatically. slang-server moves quickly;
+update it from time to time:
+
+```bash
+# Fetch the latest source and rebuild only if it changed
+bash scripts/install-slang-server.sh update
+
+# Show the installed version and the source commit it was built from
+bash scripts/install-slang-server.sh check
+```
+
+Restart the session (or run `/reload-plugins`) afterwards so the new binary
+is picked up.
+
+To build a specific release, branch, or fork:
+
+```bash
+# Pin to a tag, branch, or commit
+bash scripts/install-slang-server.sh install --ref <tag-or-branch>
+
+# Build from a fork
+SLANG_SERVER_REPO=https://github.com/<you>/slang-server.git \
+  bash scripts/install-slang-server.sh install
+```
+
 ### Option B — install yourself
 
 See [hudson-trading/slang-server](https://github.com/hudson-trading/slang-server) build instructions, then place the `slang-server` binary anywhere on your `PATH`.
 
 ## File-type bindings
 
-| Extension     | Language ID     |
-| :------------ | :-------------- |
-| `.sv`, `.svh` | `systemverilog` |
-| `.v`, `.vh`   | `verilog`       |
+| Extension          | Language ID     |
+| :----------------- | :-------------- |
+| `.sv`, `.svh`      | `systemverilog` |
+| `.v`, `.vh`, `.vl` | `verilog`       |
+
+## Project configuration (optional)
+
+slang-server works without configuration, but large or UVM-based projects
+benefit from a `.slang/server.json` in the workspace root:
+
+```json
+{
+  "env": { "UVM_HOME": "/tools/uvm" },
+  "index": [{ "dirs": ["rtl", "tb", "${UVM_HOME}/src"], "excludeDirs": ["build"] }],
+  "incdirs": ["${UVM_HOME}/src"],
+  "flags": "-f slang.f"
+}
+```
+
+- `index` limits which directories are indexed (default: whole workspace).
+- `incdirs` adds include search paths; `flags` passes slang command-line flags.
+- `env` defines variables for `$VAR` / `${VAR}` expansion in the other fields.
+
+Machine-specific settings go in `.slang/local/server.json` (keep it out of
+source control) or `~/.slang/server.json`. See the upstream
+[configuration reference](https://hudson-trading.github.io/slang-server/start/config/)
+for all options.
 
 ## Repository layout
 
