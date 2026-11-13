@@ -52,8 +52,8 @@ bash scripts/install-slang-server.sh install --mode global
 bash scripts/install-slang-server.sh install --mode skip
 ```
 
-Build requirements (from the slang-server build docs): `git`, `python3`,
-CMake 3.28 or later, and a C++20 compiler (GCC 11+, clang 17+, or Xcode 16+).
+Build requirements (from the slang-server build docs): `git`, Python 3.9 or
+later, CMake 3.28 or later, and a C++20 compiler (GCC 11+, clang 17+, or Xcode 16+).
 
 ### Updating slang-server
 
