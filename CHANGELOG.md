@@ -4,6 +4,18 @@ All notable changes to `systemverilog-lsp` are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2026-11-13
+
+### Fixed
+- **Build failed when CMake picked an old Python.** slang's code
+  generators need Python 3.9+ (`str.removesuffix`). CMake's `FindPython`
+  can select an older interpreter that is not the `PATH` default (seen:
+  `~/.local/bin/python3.8` on a system whose `python3` is 3.14), failing
+  with `AttributeError: 'str' object has no attribute 'removesuffix'`.
+  The installer now finds a Python >= 3.9 itself, fails the prerequisite
+  check if there is none, and passes it to CMake as `Python_EXECUTABLE`.
+  `SLANG_SERVER_PYTHON` overrides the choice.
+
 ## [1.2.0] - 2026-11-13
 
 Catch-up with slang-server `main` (v0.3.1 plus later changes).

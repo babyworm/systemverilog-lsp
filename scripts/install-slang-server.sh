@@ -15,6 +15,8 @@ REF="${SLANG_SERVER_REF:-main}"
 MIN_CMAKE_VERSION="3.28"
 MIN_GCC_MAJOR="11"
 MIN_CLANG_MAJOR="17"
+# slang's code generators need Python >= 3.9 (str.removesuffix).
+PYTHON_BIN="${SLANG_SERVER_PYTHON:-}"
 
 usage() {
   cat <<'EOF'
@@ -41,6 +43,7 @@ Environment:
   SLANG_SERVER_REPO     Git URL to build from (default: upstream repository)
   SLANG_SERVER_REF      Same as --ref
   SLANG_SERVER_SRC_DIR  Source checkout location (default: ~/.local/src/slang-server)
+  SLANG_SERVER_PYTHON   Python >= 3.9 interpreter for the build (default: auto-detect)
 EOF
 }
 
@@ -85,10 +88,35 @@ parse_args() {
   done
 }
 
+python_ok() {
+  "$1" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1
+}
+
+# Pick an interpreter explicitly: CMake's FindPython may otherwise select an
+# older python (e.g. ~/.local/bin/python3.8) that is not the PATH default.
+find_python() {
+  local cand
+  if [ -n "$PYTHON_BIN" ]; then
+    python_ok "$PYTHON_BIN" && return 0
+    echo "SLANG_SERVER_PYTHON=$PYTHON_BIN is not a Python >= 3.9 interpreter" >&2
+    return 1
+  fi
+  for cand in python3 python3.14 python3.13 python3.12 python3.11 python3.10 python3.9; do
+    if have "$cand" && python_ok "$cand"; then
+      PYTHON_BIN="$(command -v "$cand")"
+      return 0
+    fi
+  done
+  echo "Missing prerequisite: python3 >= 3.9" >&2
+  return 1
+}
+
 check_prereqs() {
   local ok=1
 
-  for bin in git cmake python3; do
+  find_python || ok=0
+
+  for bin in git cmake; do
     if ! have "$bin"; then
       echo "Missing prerequisite: $bin" >&2
       ok=0
@@ -174,7 +202,8 @@ build_and_install() {
 
   cmake -S "$SRC_DIR" -B "$build_dir" "${generator_args[@]}" \
     -DCMAKE_BUILD_TYPE=Release \
-    -DSLANG_SERVER_INCLUDE_TESTS=OFF
+    -DSLANG_SERVER_INCLUDE_TESTS=OFF \
+    -DPython_EXECUTABLE="$PYTHON_BIN"
   cmake --build "$build_dir" -j"$(nproc 2>/dev/null || echo 4)" --target slang_server
 
   # Copy the binary directly. `cmake --install` also runs the install rules of
