@@ -4,6 +4,49 @@ All notable changes to `systemverilog-lsp` are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-11-13
+
+Catch-up with slang-server `main` (v0.3.1 plus later changes).
+
+### Added
+- `install-slang-server.sh update`: fetches the source and rebuilds only
+  when the checked-out commit changed. Previously there was no supported
+  way to refresh an existing install, and the SessionStart hook stays
+  silent once any `slang-server` binary is on `PATH`.
+- `--ref REF` option and `SLANG_SERVER_REF`, `SLANG_SERVER_REPO`,
+  `SLANG_SERVER_SRC_DIR` environment overrides, to build a pinned tag or
+  branch, or a fork.
+- `check` now also prints the source commit the checkout is at.
+- `.vl` mapped to the `verilog` language ID, matching the upstream VS Code
+  extension.
+- README: update instructions, build requirements, and a short
+  `.slang/server.json` configuration section (`index`, `incdirs`, `flags`,
+  `env`).
+
+### Fixed
+- **Install step failed after a successful build.** The installer ran
+  `cmake --install`, which also executes the install rules of bundled
+  dependencies that the `slang_server` target does not build; against
+  current slang-server it aborts with
+  `file INSTALL cannot find ".../build/lib/libmimalloc.a"`, leaving no
+  binary in the prefix. The installer now copies `build/bin/slang-server`
+  into `<prefix>/bin` directly.
+
+### Changed
+- Minimum CMake raised from 3.20 to 3.28, matching slang-server's
+  `cmake_minimum_required`. With the old check, CMake 3.20–3.27 passed the
+  prerequisite test and then failed at configure time.
+- `python3` is now checked as a prerequisite, and clang++ must be 17 or
+  newer (Apple clang is not version-checked).
+- Submodules are initialized without `--recursive`; slang-server only needs
+  its direct submodules, and recursion pulled reflect-cpp's unused `vcpkg`
+  submodule. They are fetched shallow (`--depth 1`), with a
+  full fetch as fallback.
+- The installer configures with `-DSLANG_SERVER_INCLUDE_TESTS=OFF`.
+- The source checkout is now a detached HEAD at the requested ref instead
+  of a local `main` branch.
+- README capability list updated.
+
 ## [1.1.4] - 2026-04-25
 
 ### Fixed

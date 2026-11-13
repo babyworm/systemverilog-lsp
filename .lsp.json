@@ -6,7 +6,8 @@
       ".sv": "systemverilog",
       ".svh": "systemverilog",
       ".v": "verilog",
-      ".vh": "verilog"
+      ".vh": "verilog",
+      ".vl": "verilog"
     }
   }
 }
